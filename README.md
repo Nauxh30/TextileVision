@@ -147,5 +147,33 @@ uvicorn main:app --host 0.0.0.0 --port $PORT
 - Update `const API = 'http://localhost:8000'` in the HTML to your deployed backend URL
 
 ---
+## Snapshorts
 
-*Built with the Gabor + One-Class SVM pipeline from the TextileVision Colab notebook.*
+
+
+**Dashboard:**
+
+
+<img width="1911" height="855" alt="image" src="https://github.com/user-attachments/assets/cc7afad1-7416-40f3-962f-043af40a2d37" />
+
+
+
+**With Defect:**
+
+
+
+
+<img width="1575" height="795" alt="image" src="https://github.com/user-attachments/assets/de0cac81-4430-4aec-ba7c-059441d93435" />
+
+
+
+
+**Without defect:**
+
+
+
+<img width="1584" height="663" alt="image" src="https://github.com/user-attachments/assets/a5f43cea-2727-4af5-97bb-ca3d0fab23c4" />
+
+
+
+
