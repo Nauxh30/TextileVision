@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TextileVision — Fabric Defect Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #0f1117;
+    --ink-2: #3d4050;
+    --ink-3: #8a8fa8;
+    --bg: #f4f3ef;
+    --surface: #fafaf8;
+    --surface-2: #ffffff;
+    --border: #e2e0d8;
+    --border-2: #c8c5bb;
+    --accent: #1a3a5c;
+    --accent-light: #e8eff7;
+    --accent-mid: #4a7ab5;
+    --green: #1d6b3a;
+    --green-bg: #e8f5ed;
+    --red: #a02020;
+    --red-bg: #fceaea;
+    --amber: #7a4a08;
+    --amber-bg: #fef3e0;
+    --blue: #1a4a8a;
+    --blue-bg: #e4edf8;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --r: 10px;
+    --r-lg: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── AUTH SCREEN ── */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #auth-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,0.02) 0px,
+      rgba(255,255,255,0.02) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+  }
+
+  #auth-screen::after {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .auth-card {
+    position: relative;
+    z-index: 10;
+    background: var(--surface-2);
+    border-radius: 20px;
+    padding: 48px;
+    width: 420px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+  }
+
+  .auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .auth-logo-icon {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-logo-icon svg { width: 22px; height: 22px; fill: white; }
+
+  .auth-logo-text { font-size: 20px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; }
+  .auth-logo-sub { font-size: 11px; color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase; }
+
+  .auth-tabs {
+    display: flex;
+    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 28px;
+    gap: 0;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    transition: all 0.2s;
+  }
+
+  .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-2);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--accent-mid); background: white; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover { background: #152e4a; transform: translateY(-1px); }
+  .btn-primary:active { transform: none; }
+
+  .auth-hint {
+    font-size: 12px;
+    color: var(--ink-3);
+    text-align: center;
+    margin-top: 16px;
+  }
+
+  .error-msg {
+    font-size: 12px;
+    color: var(--red);
+    background: var(--red-bg);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  /* ── APP LAYOUT ── */
+  #app { display: none; height: 100vh; flex-direction: row; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--accent);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-logo-icon {
+    width: 34px; height: 34px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sidebar-logo-icon svg { width: 18px; height: 18px; fill: white; }
+  .sidebar-logo-name { font-size: 15px; font-weight: 600; color: white; letter-spacing: -0.2px; }
+  .sidebar-logo-ver { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; }
+
+  .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 8px 12px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.65);
+    font-size: 13px;
+    font-weight: 400;
+    transition: all 0.15s;
+    margin-bottom: 1px;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.15); color: white; font-weight: 500; }
+
+  .nav-item svg { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
+  .nav-item.active svg { opacity: 1; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .sidebar-user {
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .user-name { font-size: 12px; font-weight: 500; color: white; }
+  .user-role { font-size: 10px; color: rgba(255,255,255,0.45); text-transform: capitalize; }
+
+  .logout-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255,255,255,0.4);
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    transition: color 0.2s;
+  }
+
+  .logout-btn:hover { color: rgba(255,255,255,0.9); }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: 56px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .topbar-title { font-size: 16px; font-weight: 600; color: var(--ink); }
+  .topbar-sub { font-size: 12px; color: var(--ink-3); }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    animation: pulse-green 2s infinite;
+    margin-left: auto;
+  }
+
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+    50% { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+  }
+
+  .status-label { font-size: 11px; color: var(--green); font-weight: 500; }
+
+  .topbar-time { font-size: 12px; color: var(--ink-3); font-family: 'DM Mono', monospace; }
+
+  /* ── CONTENT ── */
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* ── PANELS ── */
+  .panel { display: none; animation: fadeIn 0.2s; }
+  .panel.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── STATS GRID ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-label { font-size: 11px; color: var(--ink-3); font-weight: 500; letter-spacing: 0.3px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 600; color: var(--ink); letter-spacing: -0.5px; }
+  .stat-sub { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+
+  .stat-card.accent { border-left: 3px solid var(--accent-mid); }
+  .stat-card.green { border-left: 3px solid var(--green); }
+  .stat-card.red { border-left: 3px solid var(--red); }
+  .stat-card.amber { border-left: 3px solid #d97706; }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  .card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-title svg { width: 14px; height: 14px; color: var(--ink-3); }
+
+  /* ── DETECT PANEL ── */
+  .upload-zone {
+    border: 2px dashed var(--border-2);
+    border-radius: var(--r-lg);
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+    margin-bottom: 20px;
+  }
+
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent-mid);
+    background: var(--accent-light);
+  }
+
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+  .upload-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+  .upload-sub { font-size: 12px; color: var(--ink-3); }
+
+  #file-input { display: none; }
+
+  .btn-detect {
+    padding: 11px 28px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-detect:hover { background: #152e4a; }
+  .btn-detect:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    padding: 10px 20px;
+    background: transparent;
+    color: var(--ink-2);
+    border: 1.5px solid var(--border-2);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { background: var(--bg); border-color: var(--accent-mid); color: var(--accent); }
+
+  /* ── RESULT DISPLAY ── */
+  .result-verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .verdict-pass { background: var(--green-bg); color: var(--green); }
+  .verdict-fail { background: var(--red-bg); color: var(--red); }
+
+  .result-images {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .result-img-wrap {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #000;
+  }
+
+  .result-img-wrap img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .result-img-label { font-size: 10px; color: var(--ink-3); padding: 4px 8px; text-align: center; border-top: 1px solid var(--border); background: var(--surface-2); }
+
+  /* ── DEFECT TABLE ── */
+  .defect-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .defect-table th { text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid var(--border); }
+  .defect-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--ink-2); }
+  .defect-table tr:last-child td { border-bottom: none; }
+  .defect-table tr:hover td { background: var(--bg); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .badge-critical { background: var(--red-bg); color: var(--red); }
+  .badge-major { background: var(--amber-bg); color: var(--amber); }
+  .badge-minor { background: var(--green-bg); color: var(--green); }
+  .badge-pass { background: var(--green-bg); color: var(--green); }
+  .badge-fail { background: var(--red-bg); color: var(--red); }
+  .badge-info { background: var(--blue-bg); color: var(--blue); }
+
+  /* ── PROGRESS ── */
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent-mid);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  /* ── HISTORY ── */
+  .history-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 80px 70px 80px 90px 80px;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--ink-2);
+    transition: background 0.1s;
+  }
+
+  .history-row:hover { background: var(--bg); }
+  .history-header { font-size: 10px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.5px; border-radius: var(--r) var(--r) 0 0; background: var(--bg); }
+
+  /* ── CHARTS ── */
+  canvas { max-width: 100%; }
+
+  /* ── ADMIN PANEL ── */
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .user-card:last-child { border-bottom: none; }
+
+  .user-avatar-lg {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .avatar-admin { background: #e3e0fb; color: #5040b8; }
+  .avatar-analyst { background: var(--blue-bg); color: var(--blue); }
+  .avatar-operator { background: var(--green-bg); color: var(--green); }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,58,92,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .loading-overlay.active { display: flex; }
+
+  .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text { color: white; font-size: 14px; font-weight: 500; }
+
+  /* ── NOTIFICATIONS ── */
+  .toast-container {
+    position: fixed;
+    top: 20px; right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--ink);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    box-shadow: var(--shadow-md);
+    animation: toastIn 0.3s;
+    max-width: 320px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+  .toast.warning { background: #b45309; }
+
+  @keyframes toastIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  /* ── QUALITY METER ── */
+  .quality-ring {
+    position: relative;
+    width: 120px; height: 120px;
+    margin: 0 auto 12px;
+  }
+
+  .quality-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .quality-ring-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .quality-number { font-size: 22px; font-weight: 600; color: var(--ink); }
+  .quality-label { font-size: 10px; color: var(--ink-3); letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 20px;
+    gap: 0;
+  }
+
+  .tab-btn {
+    padding: 10px 18px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-3);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── IMPORT EXPORT ── */
+  .ie-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .ie-option {
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .ie-option:hover { border-color: var(--accent-mid); }
+  .ie-icon { font-size: 28px; margin-bottom: 10px; }
+  .ie-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .ie-desc { font-size: 12px; color: var(--ink-3); margin-bottom: 14px; }
+
+  .metric-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .metric-row:last-child { border-bottom: none; }
+  .metric-name { color: var(--ink-2); }
+  .metric-val { font-weight: 600; color: var(--ink); font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  /* ── API INFO ── */
+  .api-endpoint {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .method-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .method-post { background: #fef3c7; color: #92400e; }
+  .method-get { background: #dcfce7; color: #166534; }
+
+  .scrollable { overflow-y: auto; max-height: 400px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .result-images { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  .section-sub { font-size: 13px; color: var(--ink-3); margin-bottom: 20px; }
+
+  .btn-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  .alert {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  .alert-info { background: var(--blue-bg); color: var(--blue); border-left: 3px solid var(--accent-mid); }
+  .alert-success { background: var(--green-bg); color: var(--green); border-left: 3px solid var(--green); }
+
+  .live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    background: var(--green-bg);
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse-green 1.5s infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ AUTH SCREEN ═══════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="auth-logo-text">TextileVision</div>
+        <div class="auth-logo-sub">Defect Intelligence Platform</div>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+
+    <div id="login-form">
+      <div class="error-msg" id="login-error">Invalid email or password</div>
+      <div class="form-group">
+        <label class="form-label">Email address</label>
+        <input type="email" class="form-input" id="login-email" placeholder="you@company.com" value="admin@textilvision.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="login-pass" placeholder="••••••••" value="admin123">
+      </div>
+      <button class="btn-primary" onclick="login()">Sign In to Dashboard</button>
+      <div class="auth-hint" style="margin-top:16px;">
+        Demo: admin@textilvision.com / admin123<br>
+        analyst@textilvision.com / analyst123
+      </div>
+    </div>
+
+    <div id="register-form" style="display:none;">
+      <div class="error-msg" id="reg-error">Registration failed</div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" id="reg-name" placeholder="Your full name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Work Email</label>
+        <input type="email" class="form-input" id="reg-email" placeholder="you@company.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="reg-pass" placeholder="Min 6 characters">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Department</label>
+        <input type="text" class="form-input" id="reg-dept" placeholder="Quality Control">
+      </div>
+      <button class="btn-primary" onclick="register()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="sidebar-logo-name">TextileVision</div>
+        <div class="sidebar-logo-ver">v2.0 Enterprise</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Core</div>
+      <div class="nav-item active" onclick="navigate('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="navigate('detect')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Detect Defects
+        <span class="nav-badge">AI</span>
+      </div>
+      <div class="nav-item" onclick="navigate('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        Inspection Log
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px;">Analytics</div>
+      <div class="nav-item" onclick="navigate('analytics')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        Data Analysis
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px;" id="admin-nav-section">Management</div>
+      <div class="nav-item" onclick="navigate('import-export')" >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import / Export
+      </div>
+      <div class="nav-item" onclick="navigate('admin')" id="admin-nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Administration
+      </div>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebar-avatar">A</div>
+      <div>
+        <div class="user-name" id="sidebar-name">Loading...</div>
+        <div class="user-role" id="sidebar-role">—</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Sign out">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-sub" id="topbar-sub">Overview & system status</div>
+      </div>
+      <div class="status-dot" style="margin-left:auto;"></div>
+      <span class="status-label">System Online</span>
+      <div class="topbar-time" id="topbar-time">—</div>
+    </div>
+
+    <div class="content">
+      <!-- ── DASHBOARD ── -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card accent">
+            <div class="stat-label">Total Inspections</div>
+            <div class="stat-value" id="ds-total">0</div>
+            <div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Pass Rate</div>
+            <div class="stat-value" id="ds-passrate">—</div>
+            <div class="stat-sub">Current session</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-label">Defects Found</div>
+            <div class="stat-value" id="ds-defects">0</div>
+            <div class="stat-sub">Total defects</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">Avg Quality Score</div>
+            <div class="stat-value" id="ds-quality">—</div>
+            <div class="stat-sub">0–100 scale</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:16px;">
+          <div class="card" style="grid-column: span 1;">
+            <div class="card-title">Model Status</div>
+            <div class="metric-row"><span class="metric-name">Detection Model</span><span class="badge badge-pass">Gabor + OC-SVM</span></div>
+            <div class="metric-row"><span class="metric-name">Filter Bank</span><span class="metric-val">40 filters (5×8)</span></div>
+            <div class="metric-row"><span class="metric-name">Patch Size</span><span class="metric-val">32×32 px</span></div>
+            <div class="metric-row"><span class="metric-name">Feature Dims</span><span class="metric-val">160 per patch</span></div>
+            <div class="metric-row"><span class="metric-name">Defect Types</span><span class="metric-val">Hole, Stain, Tear, Broken Thread…</span></div>
+            <div class="metric-row"><span class="metric-name">API Status</span><span class="badge badge-pass" id="ds-api-status">Checking…</span></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Recent Activity</div>
+            <div id="ds-recent-list" style="font-size:12px;color:var(--ink-3);text-align:center;padding:20px 0;">No inspections yet</div>
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Getting started:</strong> Go to <strong>Detect Defects</strong> to upload a fabric image and run real-time AI analysis. Results, heatmaps, and defect bounding boxes will appear instantly.
+        </div>
+      </div>
+
+      <!-- ── DETECT ── -->
+      <div class="panel" id="panel-detect">
+        <div class="section-title">Fabric Defect Detection</div>
+        <div class="section-sub">Upload a fabric image for real-time AI-powered anomaly analysis using Gabor filters and One-Class SVM</div>
+
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+          <div class="upload-icon">🔍</div>
+          <div class="upload-title">Drop fabric image here, or click to browse</div>
+          <div class="upload-sub">Supports JPG, PNG, BMP — any fabric or textile image</div>
+          <div id="selected-filename" style="margin-top:10px;font-size:12px;color:var(--accent-mid);font-weight:500;"></div>
+        </div>
+        <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+
+        <div class="btn-row" style="margin-bottom:20px;">
+          <button class="btn-detect" id="run-btn" onclick="runDetection()" disabled>
+            ▶ Run Detection
+          </button>
+          <button class="btn-secondary" onclick="clearDetection()">Clear</button>
+          <span style="font-size:12px;color:var(--ink-3);">Processing time: <span id="proc-time" style="font-family:'DM Mono',monospace;font-weight:600;">—</span></span>
+        </div>
+
+        <div id="result-section" style="display:none;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+            <div class="result-verdict" id="result-verdict">—</div>
+            <div style="font-size:13px;color:var(--ink-2);">Quality Score: <strong id="result-quality">—</strong></div>
+            <div style="font-size:13px;color:var(--ink-2);">Defects Found: <strong id="result-count">—</strong></div>
+            <span class="live-indicator"><span class="live-dot"></span>Live Result</span>
+          </div>
+
+          <div class="result-images" id="result-images"></div>
+
+          <div class="card" style="margin-top:16px;">
+            <div class="card-title">Detected Defects</div>
+            <div id="defect-table-wrap">
+              <div style="font-size:13px;color:var(--ink-3);padding:12px 0;text-align:center;">No defects detected</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HISTORY ── -->
+      <div class="panel" id="panel-history">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div class="section-title">Inspection Log</div>
+            <div class="section-sub" style="margin-bottom:0;">Complete history of all fabric inspections</div>
+          </div>
+          <button class="btn-secondary" onclick="loadHistory()">↻ Refresh</button>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="history-row history-header">
+            <span>ID</span><span>File / Time</span><span>Verdict</span><span>Defects</span><span>Quality</span><span>Time (ms)</span><span>Inspector</span>
+          </div>
+          <div id="history-list" style="min-height:100px;font-size:13px;color:var(--ink-3);text-align:center;padding:30px;">
+            No inspection records yet
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANALYTICS ── -->
+      <div class="panel" id="panel-analytics">
+        <div class="section-title">Data Analysis</div>
+        <div class="section-sub">Quality metrics, defect trends, and model performance</div>
+
+        <div class="stats-grid" style="margin-bottom:20px;">
+          <div class="stat-card accent">
+            <div class="stat-label">Total Scanned</div>
+            <div class="stat-value" id="an-total">0</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Pass Rate</div>
+            <div class="stat-value" id="an-pass">—</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-label">Fail Rate</div>
+            <div class="stat-value" id="an-fail">—</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">Avg Quality</div>
+            <div class="stat-value" id="an-quality">—</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Defect Type Distribution</div>
+            <canvas id="chart-defect-types" height="220"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Severity Breakdown</div>
+            <canvas id="chart-severity" height="220"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="card-title">Recent Quality Scores (Last 20 Inspections)</div>
+          <canvas id="chart-trend" height="120"></canvas>
+        </div>
+      </div>
+
+      <!-- ── IMPORT / EXPORT ── -->
+      <div class="panel" id="panel-import-export">
+        <div class="section-title">Import / Export</div>
+        <div class="section-sub">Import fabric images in bulk or export inspection data and reports</div>
+
+        <div class="ie-grid">
+          <div>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-title">📥 Import</div>
+              <div class="ie-option">
+                <div class="ie-icon">🗂</div>
+                <div class="ie-title">Bulk Image Upload</div>
+                <div class="ie-desc">Upload multiple fabric images at once for batch processing</div>
+                <button class="btn-detect" style="width:100%;" onclick="document.getElementById('bulk-input').click()">Select Images</button>
+                <input type="file" id="bulk-input" accept="image/*" multiple onchange="handleBulkSelect(event)" style="display:none;">
+              </div>
+              <div style="margin-top:12px;" id="bulk-status"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <div class="card-title">📤 Export</div>
+              <div class="ie-option" style="margin-bottom:12px;">
+                <div class="ie-icon">📊</div>
+                <div class="ie-title">Export to CSV</div>
+                <div class="ie-desc">Download all inspection records as a CSV file for Excel or data analysis</div>
+                <button class="btn-detect" style="width:100%;" onclick="exportCSV()">Download CSV</button>
+              </div>
+              <div class="ie-option">
+                <div class="ie-icon">📋</div>
+                <div class="ie-title">Export JSON</div>
+                <div class="ie-desc">Full inspection data with defect details in JSON format</div>
+                <button class="btn-secondary" style="width:100%;" onclick="exportJSON()">Download JSON</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="card-title">API Integration</div>
+          <div class="alert alert-info" style="margin-bottom:14px;">Connect your existing systems using the REST API below.</div>
+          <div class="api-endpoint">
+            <span class="method-badge method-post">POST</span>
+            <code style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink-2);">/detect — Upload image, receive full defect analysis</code>
+          </div>
+          <div class="api-endpoint">
+            <span class="method-badge method-get">GET</span>
+            <code style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink-2);">/history — Retrieve inspection records</code>
+          </div>
+          <div class="api-endpoint">
+            <span class="method-badge method-get">GET</span>
+            <code style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink-2);">/analytics — Aggregated quality metrics</code>
+          </div>
+          <div class="api-endpoint">
+            <span class="method-badge method-get">GET</span>
+            <code style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink-2);">/export/csv — Download inspection data as CSV</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ADMIN ── -->
+      <div class="panel" id="panel-admin">
+        <div class="section-title">Administration</div>
+        <div class="section-sub">User management, system settings, and audit logs</div>
+
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="adminTab('users')">Users</button>
+          <button class="tab-btn" onclick="adminTab('settings')">System Settings</button>
+          <button class="tab-btn" onclick="adminTab('audit')">Audit Log</button>
+        </div>
+
+        <div class="tab-content active" id="atab-users">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <span style="font-size:13px;color:var(--ink-3);" id="user-count-label">Loading users…</span>
+            <button class="btn-detect" onclick="showAddUser()">+ Add User</button>
+          </div>
+
+          <div id="add-user-form" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:16px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:14px;">New User</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="nu-name" placeholder="Full name"></div>
+              <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="nu-email" placeholder="email@company.com"></div>
+              <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="nu-pass" placeholder="Password"></div>
+              <div class="form-group"><label class="form-label">Department</label><input type="text" class="form-input" id="nu-dept" placeholder="Department"></div>
+            </div>
+            <div class="form-group" style="margin-top:4px;"><label class="form-label">Role</label>
+              <select class="form-input" id="nu-role">
+                <option value="operator">Operator</option>
+                <option value="analyst">Analyst</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="btn-row" style="margin-top:8px;">
+              <button class="btn-detect" onclick="createUser()">Create User</button>
+              <button class="btn-secondary" onclick="document.getElementById('add-user-form').style.display='none'">Cancel</button>
+            </div>
+          </div>
+
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div id="user-list">
+              <div style="padding:20px;text-align:center;color:var(--ink-3);font-size:13px;">Loading…</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="atab-settings">
+          <div class="card">
+            <div class="card-title">Detection Settings</div>
+            <div class="metric-row"><span class="metric-name">Gabor Frequencies</span><span class="metric-val">0.1, 0.2, 0.3, 0.4, 0.5</span></div>
+            <div class="metric-row"><span class="metric-name">Orientations</span><span class="metric-val">8 (0°–157.5°)</span></div>
+            <div class="metric-row"><span class="metric-name">Patch Size</span><span class="metric-val">32 × 32 px</span></div>
+            <div class="metric-row"><span class="metric-name">Stride</span><span class="metric-val">16 px</span></div>
+            <div class="metric-row"><span class="metric-name">Image Size</span><span class="metric-val">256 × 256 px</span></div>
+            <div class="metric-row"><span class="metric-name">Min Defect Area</span><span class="metric-val">150 px²</span></div>
+          </div>
+          <div class="card" style="margin-top:14px;">
+            <div class="card-title">Model Configuration</div>
+            <div class="metric-row"><span class="metric-name">Primary Model</span><span class="badge badge-info">One-Class SVM (RBF kernel)</span></div>
+            <div class="metric-row"><span class="metric-name">Secondary Model</span><span class="badge badge-info">Autoencoder (Dense, bottleneck=16)</span></div>
+            <div class="metric-row"><span class="metric-name">PCA Dimensions</span><span class="metric-val">40 components</span></div>
+            <div class="metric-row"><span class="metric-name">SVM nu</span><span class="metric-val">0.1</span></div>
+            <div class="metric-row"><span class="metric-name">AE Threshold</span><span class="metric-val">95th percentile (good patches)</span></div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="atab-audit">
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="history-row history-header" style="grid-template-columns:140px 1fr 100px 120px;">
+              <span>Time</span><span>Action</span><span>User</span><span>Status</span>
+            </div>
+            <div id="audit-log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Analyzing fabric…</div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const API = 'http://localhost:8000';
+let token = null;
+let currentUser = null;
+let selectedFile = null;
+let charts = {};
+let auditLog = [];
+
+// ═══ TIME ═══════════════════════════
+function updateTime() {
+  const now = new Date();
+  document.getElementById('topbar-time').textContent =
+    now.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ' ' +
+    now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ═══ TOAST ══════════════════════════
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ═══ API HELPER ═════════════════════
+async function api(path, opts={}) {
+  const headers = {'Content-Type':'application/json', ...(opts.headers||{})};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (opts.body instanceof FormData) delete headers['Content-Type'];
+  try {
+    const r = await fetch(API + path, {...opts, headers});
+    if (r.status === 401) { logout(); return null; }
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+// ═══ AUTH ════════════════════════════
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('login-form').style.display = tab==='login'?'block':'none';
+  document.getElementById('register-form').style.display = tab==='register'?'block':'none';
+}
+
+async function login() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  document.getElementById('login-error').style.display = 'none';
+  
+  // Try real API first, fall back to mock
+  const res = await api('/auth/login', {
+    method:'POST',
+    body: JSON.stringify({email, password: pass})
+  });
+  
+  if (res && res.token) {
+    token = res.token;
+    currentUser = res.user;
+    initApp();
+    addAudit('Login', email, 'Success');
+  } else {
+    // Mock fallback for demo without backend
+    const mockUsers = {
+      'admin@textilvision.com': {id:'u001',name:'Admin User',role:'admin',company:'TextilVision Inc.',department:'Operations',avatar:'A'},
+      'analyst@textilvision.com': {id:'u002',name:'Quality Analyst',role:'analyst',company:'TextilVision Inc.',department:'Quality Control',avatar:'Q'},
+      'operator@textilvision.com': {id:'u003',name:'Line Operator',role:'operator',company:'TextilVision Inc.',department:'Production',avatar:'L'}
+    };
+    const passwords = {'admin@textilvision.com':'admin123','analyst@textilvision.com':'analyst123','operator@textilvision.com':'operator123'};
+    if (mockUsers[email] && passwords[email]===pass) {
+      currentUser = {...mockUsers[email], email};
+      token = 'demo-token';
+      initApp();
+      addAudit('Login (Demo Mode)', email, 'Success');
+    } else {
+      document.getElementById('login-error').style.display='block';
+    }
+  }
+}
+
+async function register() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const dept = document.getElementById('reg-dept').value.trim();
+  
+  if (!name || !email || !pass) { toast('Please fill all fields', 'error'); return; }
+  
+  const res = await api('/users', {
+    method:'POST',
+    body: JSON.stringify({name,email,password:pass,role:'operator',department:dept})
+  });
+  
+  if (res && res.message) {
+    toast('Account created! Please sign in.', 'success');
+    switchAuthTab('login');
+    document.getElementById('login-email').value = email;
+  } else {
+    toast('Registration failed. Try a different email.', 'error');
+  }
+}
+
+function logout() {
+  token = null;
+  currentUser = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  addAudit('Logout', '—', 'Success');
+}
+
+// ═══ APP INIT ════════════════════════
+function initApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  
+  document.getElementById('sidebar-name').textContent = currentUser.name;
+  document.getElementById('sidebar-role').textContent = currentUser.role;
+  document.getElementById('sidebar-avatar').textContent = currentUser.avatar || currentUser.name[0];
+  
+  if (currentUser.role !== 'admin') {
+    document.getElementById('admin-nav-item').style.display = 'none';
+    document.getElementById('admin-nav-section').style.display = 'none';
+  }
+  
+  checkApiStatus();
+  loadDashboard();
+  navigate('dashboard');
+  toast(`Welcome back, ${currentUser.name}!`, 'success');
+}
+
+async function checkApiStatus() {
+  const res = await api('/health');
+  const el = document.getElementById('ds-api-status');
+  if (res && res.status === 'healthy') {
+    el.textContent = 'Connected';
+    el.className = 'badge badge-pass';
+  } else {
+    el.textContent = 'Demo Mode';
+    el.className = 'badge badge-info';
+  }
+}
+
+// ═══ NAVIGATION ═════════════════════
+const panelTitles = {
+  dashboard: ['Dashboard', 'Overview & system status'],
+  detect: ['Detect Defects', 'AI-powered fabric inspection'],
+  history: ['Inspection Log', 'All inspection records'],
+  analytics: ['Data Analysis', 'Quality metrics & trends'],
+  'import-export': ['Import / Export', 'Data management'],
+  admin: ['Administration', 'User & system management']
+};
+
+function navigate(page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(n => {
+    if (n.getAttribute('onclick') === `navigate('${page}')`) n.classList.add('active');
+  });
+  
+  const panel = document.getElementById(`panel-${page}`);
+  if (panel) panel.classList.add('active');
+  
+  const [title, sub] = panelTitles[page] || [page, ''];
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-sub').textContent = sub;
+  
+  if (page === 'analytics') loadAnalytics();
+  if (page === 'history') loadHistory();
+  if (page === 'admin') loadUsers();
+  if (page === 'dashboard') loadDashboard();
+}
+
+// ═══ DASHBOARD ═══════════════════════
+function loadDashboard() {
+  const hist = getLocalHistory();
+  const total = hist.length;
+  const passed = hist.filter(r => r.verdict==='PASS').length;
+  const defects = hist.reduce((s,r)=>s+(r.defect_count||0),0);
+  const avgQ = total ? (hist.reduce((s,r)=>s+(r.quality_score||100),0)/total).toFixed(1) : '—';
+  
+  document.getElementById('ds-total').textContent = total;
+  document.getElementById('ds-passrate').textContent = total ? (passed/total*100).toFixed(1)+'%' : '—';
+  document.getElementById('ds-defects').textContent = defects;
+  document.getElementById('ds-quality').textContent = avgQ !== '—' ? avgQ : '—';
+  
+  const el = document.getElementById('ds-recent-list');
+  if (!hist.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--ink-3);padding:20px 0;font-size:12px;">No inspections yet</div>';
+    return;
+  }
+  el.innerHTML = hist.slice(-5).reverse().map(r => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span class="badge ${r.verdict==='PASS'?'badge-pass':'badge-fail'}">${r.verdict}</span>
+      <span style="flex:1;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.filename||'fabric.png'}</span>
+      <span style="color:var(--ink-3);">${r.defect_count} defect${r.defect_count!==1?'s':''}</span>
+    </div>
+  `).join('');
+}
+
+// ═══ LOCAL HISTORY ═══════════════════
+let localHistory = [];
+
+function getLocalHistory() { return localHistory; }
+
+function saveToHistory(record) {
+  localHistory.push(record);
+  loadDashboard();
+}
+
+// ═══ DETECT ══════════════════════════
+function handleFileSelect(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  selectedFile = f;
+  document.getElementById('selected-filename').textContent = `Selected: ${f.name}`;
+  document.getElementById('run-btn').disabled = false;
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  handleDragLeave();
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) {
+    selectedFile = f;
+    document.getElementById('selected-filename').textContent = `Selected: ${f.name}`;
+    document.getElementById('run-btn').disabled = false;
+  }
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('dragover');
+}
+
+function handleDragLeave() {
+  document.getElementById('upload-zone').classList.remove('dragover');
+}
+
+function clearDetection() {
+  selectedFile = null;
+  document.getElementById('selected-filename').textContent = '';
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+async function runDetection() {
+  if (!selectedFile) return;
+  
+  showLoading('Analyzing fabric with Gabor filters…');
+  
+  // Try real API
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+  
+  const res = await apiWithFile('/detect', fd);
+  
+  hideLoading();
+  
+  if (res) {
+    displayResult(res);
+    saveToHistory(res);
+    addAudit('Detection Run', currentUser.email, res.verdict);
+    toast(res.verdict === 'PASS' ? '✓ No defects detected' : `⚠ ${res.defect_count} defect(s) detected`, res.verdict === 'PASS' ? 'success' : 'warning');
+  } else {
+    // Demo mode: simulate result
+    displayDemoResult();
+  }
+}
+
+async function apiWithFile(path, formData) {
+  try {
+    const r = await fetch(API + path, {
+      method: 'POST',
+      headers: token && token !== 'demo-token' ? {Authorization:`Bearer ${token}`} : {},
+      body: formData
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+function displayDemoResult() {
+  // Simulate a result for demo
+  const hasDefect = Math.random() > 0.4;
+  const defects = hasDefect ? [
+    {id:'D001',type:'Hole',severity:'Major',bbox:[60,40,30,25],area:450,confidence:0.94},
+    {id:'D002',type:'Stain',severity:'Minor',bbox:[130,100,20,18],area:200,confidence:0.87}
+  ] : [];
+  
+  const record = {
+    id: `INS${String(localHistory.length+1).padStart(5,'0')}`,
+    timestamp: new Date().toISOString(),
+    filename: selectedFile.name,
+    verdict: hasDefect ? 'FAIL' : 'PASS',
+    defect_count: defects.length,
+    defects,
+    quality_score: hasDefect ? 72 : 96,
+    processing_time: (0.3 + Math.random()*0.5).toFixed(3),
+    images: null
+  };
+  
+  displayResult(record);
+  saveToHistory(record);
+  addAudit('Detection (Demo)', currentUser.email, record.verdict);
+  toast(record.verdict === 'PASS' ? '✓ Fabric passed inspection' : `⚠ ${record.defect_count} defect(s) detected`, record.verdict === 'PASS' ? 'success' : 'warning');
+}
+
+function displayResult(res) {
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('proc-time').textContent = res.processing_time ? `${(res.processing_time*1000).toFixed(0)}ms` : '—';
+  
+  const verdict = document.getElementById('result-verdict');
+  verdict.textContent = res.verdict === 'PASS' ? '✓ PASS — No Defects' : `✗ FAIL — Defects Detected`;
+  verdict.className = `result-verdict ${res.verdict==='PASS' ? 'verdict-pass' : 'verdict-fail'}`;
+  
+  document.getElementById('result-quality').textContent = res.quality_score?.toFixed(1) || '—';
+  document.getElementById('result-count').textContent = `${res.defect_count} defect${res.defect_count!==1?'s':''}`;
+  
+  // Images
+  const imgWrap = document.getElementById('result-images');
+  const imgLabels = ['Result with Boxes', 'Anomaly Heatmap', 'Preprocessed', 'Gabor Response'];
+  
+  if (res.images) {
+    const keys = ['original','heatmap','preprocessed','gabor_sample'];
+    imgWrap.innerHTML = keys.map((k,i) => `
+      <div class="result-img-wrap">
+        <img src="data:image/png;base64,${res.images[k]}" alt="${imgLabels[i]}">
+        <div class="result-img-label">${imgLabels[i]}</div>
+      </div>
+    `).join('');
+  } else {
+    // Show placeholder with uploaded file
+    const url = URL.createObjectURL(selectedFile);
+    const placeholders = ['🔍', '🌡', '⬛', '〰'];
+    imgWrap.innerHTML = `
+      <div class="result-img-wrap">
+        <img src="${url}" alt="Uploaded" style="object-fit:cover;">
+        <div class="result-img-label">Original Image</div>
+      </div>
+      ${[1,2,3].map(i=>`
+        <div class="result-img-wrap" style="background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;aspect-ratio:1;min-height:100px;">
+          <span style="font-size:28px;">${placeholders[i]}</span>
+          <div class="result-img-label" style="background:none;border:none;">${imgLabels[i]}</div>
+        </div>
+      `).join('')}
+    `;
+  }
+  
+  // Defect table
+  const tWrap = document.getElementById('defect-table-wrap');
+  if (!res.defects || !res.defects.length) {
+    tWrap.innerHTML = '<div style="font-size:13px;color:var(--ink-3);padding:16px;text-align:center;">No defects detected — fabric passed inspection ✓</div>';
+  } else {
+    tWrap.innerHTML = `
+      <table class="defect-table">
+        <thead><tr><th>ID</th><th>Type</th><th>Severity</th><th>Confidence</th><th>Area (px²)</th><th>Location</th></tr></thead>
+        <tbody>
+          ${res.defects.map(d=>`
+            <tr>
+              <td style="font-family:'DM Mono',monospace;font-weight:500;">${d.id}</td>
+              <td>${d.type}</td>
+              <td><span class="badge badge-${d.severity.toLowerCase()}">${d.severity}</span></td>
+              <td>${(d.confidence*100).toFixed(1)}%</td>
+              <td style="font-family:'DM Mono',monospace;">${d.area}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:11px;">[${d.bbox.join(', ')}]</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+  
+  document.getElementById('result-section').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ═══ HISTORY ═════════════════════════
+async function loadHistory() {
+  const res = await api('/history');
+  const hist = res?.records || getLocalHistory().slice().reverse();
+  
+  const el = document.getElementById('history-list');
+  if (!hist.length) {
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--ink-3);">No inspection records yet. Run your first detection.</div>';
+    return;
+  }
+  
+  el.innerHTML = hist.map(r => `
+    <div class="history-row">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;">${r.id}</span>
+      <div>
+        <div style="font-size:12px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.filename||'—'}</div>
+        <div style="font-size:11px;color:var(--ink-3);">${new Date(r.timestamp).toLocaleString('en-IN')}</div>
+      </div>
+      <span><span class="badge ${r.verdict==='PASS'?'badge-pass':'badge-fail'}">${r.verdict}</span></span>
+      <span style="font-family:'DM Mono',monospace;">${r.defect_count}</span>
+      <span style="font-family:'DM Mono',monospace;">${r.quality_score?.toFixed(1)}</span>
+      <span style="font-family:'DM Mono',monospace;">${r.processing_time ? (r.processing_time*1000).toFixed(0) : '—'}</span>
+      <span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;">${(r.inspector||'—').split('@')[0]}</span>
+    </div>
+  `).join('');
+}
+
+// ═══ ANALYTICS ═══════════════════════
+async function loadAnalytics() {
+  const res = await api('/analytics');
+  
+  const hist = getLocalHistory();
+  const total = hist.length;
+  const passed = hist.filter(r=>r.verdict==='PASS').length;
+  const failed = total - passed;
+  const avgQ = total ? (hist.reduce((s,r)=>s+(r.quality_score||0),0)/total).toFixed(1) : '—';
+  
+  document.getElementById('an-total').textContent = res?.summary?.total || total;
+  document.getElementById('an-pass').textContent = total ? (passed/total*100).toFixed(1)+'%' : '—';
+  document.getElementById('an-fail').textContent = total ? (failed/total*100).toFixed(1)+'%' : '—';
+  document.getElementById('an-quality').textContent = res?.summary?.avg_quality || avgQ;
+  
+  // Build charts from local data
+  const defectCounts = {};
+  const severityCounts = {Critical:0,Major:0,Minor:0};
+  hist.forEach(r => {
+    (r.defects||[]).forEach(d => {
+      defectCounts[d.type] = (defectCounts[d.type]||0) + 1;
+      severityCounts[d.severity] = (severityCounts[d.severity]||0) + 1;
+    });
+  });
+  
+  drawDefectChart(defectCounts);
+  drawSeverityChart(severityCounts);
+  drawTrendChart(hist);
+}
+
+function drawDefectChart(data) {
+  const ctx = document.getElementById('chart-defect-types').getContext('2d');
+  if (charts.defect) charts.defect.destroy();
+  
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+  
+  if (!labels.length) {
+    ctx.canvas.parentElement.innerHTML = '<canvas id="chart-defect-types" height="220"></canvas><div style="text-align:center;padding:40px;color:var(--ink-3);font-size:12px;">No data yet</div>';
+    return;
+  }
+  
+  charts.defect = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: ['#3b6dd8','#d84a4a','#e6a020','#2d8a52','#8a4ab5','#3aabcc'],
+        borderWidth: 0
+      }]
+    },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{font:{size:11},boxWidth:12} } } }
+  });
+}
+
+function drawSeverityChart(data) {
+  const ctx = document.getElementById('chart-severity').getContext('2d');
+  if (charts.severity) charts.severity.destroy();
+  charts.severity = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Critical','Major','Minor'],
+      datasets: [{
+        data: [data.Critical||0, data.Major||0, data.Minor||0],
+        backgroundColor: ['#d84a4a','#e6a020','#2d8a52'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},x:{grid:{display:false},ticks:{font:{size:11}}}}
+    }
+  });
+}
+
+function drawTrendChart(hist) {
+  const ctx = document.getElementById('chart-trend').getContext('2d');
+  if (charts.trend) charts.trend.destroy();
+  
+  const data = hist.slice(-20).map(r => r.quality_score || 0);
+  const labels = hist.slice(-20).map((_,i) => `#${i+1}`);
+  
+  charts.trend = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Quality Score',
+        data,
+        borderColor: '#1a3a5c',
+        backgroundColor: 'rgba(26,58,92,0.06)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: '#1a3a5c',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{min:0,max:100,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},
+        x:{grid:{display:false},ticks:{font:{size:11}}}
+      }
+    }
+  });
+}
+
+// ═══ ADMIN ═══════════════════════════
+async function loadUsers() {
+  const res = await api('/users');
+  
+  const mockUsers = [
+    {id:'u001',name:'Admin User',email:'admin@textilvision.com',role:'admin',department:'Operations'},
+    {id:'u002',name:'Quality Analyst',email:'analyst@textilvision.com',role:'analyst',department:'Quality Control'},
+    {id:'u003',name:'Line Operator',email:'operator@textilvision.com',role:'operator',department:'Production'}
+  ];
+  
+  const users = res || mockUsers;
+  document.getElementById('user-count-label').textContent = `${users.length} user${users.length!==1?'s':''} registered`;
+  
+  const avatarClasses = {admin:'avatar-admin',analyst:'avatar-analyst',operator:'avatar-operator'};
+  
+  document.getElementById('user-list').innerHTML = users.map(u => `
+    <div class="user-card">
+      <div class="user-avatar-lg ${avatarClasses[u.role]||'avatar-operator'}">${u.name[0].toUpperCase()}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;color:var(--ink);">${u.name}</div>
+        <div style="font-size:11px;color:var(--ink-3);">${u.email} · ${u.department||'—'}</div>
+      </div>
+      <span class="badge badge-info">${u.role}</span>
+    </div>
+  `).join('');
+  
+  loadAuditLog();
+}
+
+function showAddUser() {
+  const f = document.getElementById('add-user-form');
+  f.style.display = f.style.display==='none' ? 'block' : 'none';
+}
+
+async function createUser() {
+  const name = document.getElementById('nu-name').value.trim();
+  const email = document.getElementById('nu-email').value.trim();
+  const pass = document.getElementById('nu-pass').value;
+  const dept = document.getElementById('nu-dept').value.trim();
+  const role = document.getElementById('nu-role').value;
+  
+  if (!name||!email||!pass) { toast('Fill in all required fields','error'); return; }
+  
+  const res = await api('/users', {method:'POST',body:JSON.stringify({name,email,password:pass,role,department:dept})});
+  
+  if (res?.message) {
+    toast('User created successfully','success');
+    document.getElementById('add-user-form').style.display='none';
+    loadUsers();
+    addAudit(`Created user: ${email}`, currentUser.email, 'Success');
+  } else {
+    toast('Failed to create user — email may already exist','error');
+  }
+}
+
+function adminTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active',['users','settings','audit'][i]===tab));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(`atab-${tab}`).classList.add('active');
+  if (tab==='audit') loadAuditLog();
+}
+
+function loadAuditLog() {
+  const el = document.getElementById('audit-log');
+  if (!auditLog.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-3);font-size:12px;">No audit events yet</div>';
+    return;
+  }
+  el.innerHTML = auditLog.slice().reverse().map(a => `
+    <div class="history-row" style="grid-template-columns:140px 1fr 100px 120px;">
+      <span style="font-size:11px;color:var(--ink-3);font-family:'DM Mono',monospace;">${a.time}</span>
+      <span style="font-size:12px;">${a.action}</span>
+      <span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;">${a.user.split('@')[0]}</span>
+      <span><span class="badge ${a.status==='Success'?'badge-pass':'badge-fail'}">${a.status}</span></span>
+    </div>
+  `).join('');
+}
+
+function addAudit(action, user, status) {
+  auditLog.push({
+    time: new Date().toLocaleTimeString('en-IN'),
+    action, user, status
+  });
+}
+
+// ═══ IMPORT / EXPORT ═════════════════
+function handleBulkSelect(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  const el = document.getElementById('bulk-status');
+  el.innerHTML = `
+    <div class="alert alert-info">
+      <strong>${files.length} file${files.length!==1?'s':''} selected.</strong> 
+      Go to <em>Detect Defects</em> to process them individually, or use the API for batch processing.
+    </div>
+  `;
+  toast(`${files.length} images selected for import`, 'success');
+}
+
+async function exportCSV() {
+  const res = await api('/export/csv');
+  const hist = getLocalHistory();
+  
+  let csv;
+  if (res?.csv) {
+    csv = res.csv;
+  } else if (hist.length) {
+    csv = 'ID,Timestamp,Filename,Verdict,Defects,Quality Score,Processing Time\n' +
+      hist.map(r => `${r.id},${r.timestamp},${r.filename||''},${r.verdict},${r.defect_count},${r.quality_score||''},${r.processing_time||''}`).join('\n');
+  } else {
+    toast('No data to export yet', 'warning');
+    return;
+  }
+  
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `textilvision_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('CSV exported successfully', 'success');
+  addAudit('CSV Export', currentUser.email, 'Success');
+}
+
+function exportJSON() {
+  const hist = getLocalHistory();
+  if (!hist.length) { toast('No data to export yet', 'warning'); return; }
+  const blob = new Blob([JSON.stringify(hist, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `textilvision_export_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('JSON exported successfully', 'success');
+  addAudit('JSON Export', currentUser.email, 'Success');
+}
+
+// ═══ LOADING ═════════════════════════
+function showLoading(msg='Analyzing…') {
+  document.getElementById('loading-text').textContent = msg;
+  document.getElementById('loading').classList.add('active');
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.remove('active');
+}
+
+// ═══ KEYBOARD SHORTCUTS ═════════════
+document.addEventListener('keydown', e => {
+  if (!currentUser) return;
+  if (e.key==='Enter' && document.getElementById('auth-screen').style.display!=='none') login();
+});
+
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key==='Enter') login();
+});
+</script>
+</body>
+</html>
